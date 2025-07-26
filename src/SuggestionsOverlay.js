@@ -1,4 +1,4 @@
-import React, { Children, useState, useEffect } from 'react'
+import React, { Children, useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { inline } from 'substyle'
 import { defaultStyle } from './utils'
@@ -29,6 +29,16 @@ function SuggestionsOverlay({
   onMouseEnter,
 }) {
   const [ulElement, setUlElement] = useState(undefined)
+
+  const lastMousePos = useRef({ x: null, y: null });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   useEffect(() => {
     if (
@@ -95,7 +105,7 @@ function SuggestionsOverlay({
         suggestion={result}
         focused={isFocused}
         onClick={() => select(result, queryInfo)}
-        onMouseEnter={() => handleMouseEnter(index)}
+        onMouseEnter={(e) => handleMouseEnter(index, e)}
       />
     )
   }
@@ -109,6 +119,10 @@ function SuggestionsOverlay({
   }
 
   const handleMouseEnter = (index, ev) => {
+    const { x, y } = lastMousePos.current;
+    if (x === ev.clientX && y === ev.clientY) {
+      return
+    }
     if (onMouseEnter) {
       onMouseEnter(index)
     }
